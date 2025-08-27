@@ -1,0 +1,14 @@
+[proxy]
+[proxy.binding]
+'docker.registry-proxy.localhost' = 'https://registry-1.docker.io'
+'gcr.registry-proxy.localhost' = 'https://gcr.io'
+'ghcr.registry-proxy.localhost' = 'https://ghcr.io'
+'k8s.registry-proxy.localhost' = 'https://registry.k8s.io'
+'quay.registry-proxy.localhost' = 'https://quay.io'
+
+[server]
+listen = ':8000'
+logLevel = 'INFO'
+enableTLS = false
+tlsCertificate = 'server.crt'
+tlsKey = 'server.key'
