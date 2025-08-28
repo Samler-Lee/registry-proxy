@@ -30,6 +30,10 @@ func listenHTTP() error {
 }
 
 func listenHTTPS() error {
+	if !config.Server.TLS.Enable {
+		return nil
+	}
+
 	var certPath, keyPath string
 	if !config.Server.TLS.UseLetsEncrypt {
 		certPath = config.Server.TLS.CertPath
@@ -94,5 +98,12 @@ func stopHTTPServer() {
 	err := httpServer.Shutdown(ctx)
 	if err != nil {
 		console.Log().Error("[http] 服务器关闭时出错, %s", err)
+	}
+
+	if httpsServer != nil {
+		err = httpsServer.Shutdown(ctx)
+		if err != nil {
+			console.Log().Error("[http] 服务器关闭时出错, %s", err)
+		}
 	}
 }
