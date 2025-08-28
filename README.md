@@ -8,6 +8,7 @@
 - 支持私有仓库登录认证
 - 无磁盘缓存，对小磁盘容量设备友好
 - 较低的内存占用
+- 支持 Let's Encrypt 证书自动管理
 
 ## ⚙️ 配置
 
@@ -21,23 +22,47 @@
 
 ### server.listen
 
-服务监听的地址和端口，默认值为 `:8000`，表示监听所有网卡的 8000 端口，如果你使用 Docker 或 Docker Compose 进行部署，请确保映射了该端口。
+HTTP 服务监听的地址和端口
+
+默认值：`:80`
 
 ### server.logLevel
 
-控制台输出的日志等级，默认值为 `INFO`，你可以调整至 `DEBUG` 查看请求转发的一些细节，但会产生大量日志。
+控制台输出的日志等级，你可以调整至 `DEBUG` 查看请求转发的一些细节，但会产生大量日志。
 
-### server.enableTLS
+默认值：`INFO`
 
-是否开启TLS，如果您选择开启TLS，请注意提供正确的 `server.tlsCertificate` 和 `server.tlsKey`
+### server.tls.enable
 
-### server.tlsCertificate
+是否开启TLS
+
+默认值：`false`
+
+### server.tls.listen
+
+HTTPS 服务监听的地址和端口
+
+默认值：`:443`
+
+### server.tls.useLetsEncrypt
+
+是否启用基于 `Let's Encrypt` 的自动证书管理功能，该配置与 `server.tls.certPath` 和 `server.tls.keyPath` 互斥，如果启用该配置，后者将失效。
+
+**注意：如果启用该配置，请确保 `80` 端口与 `443` 端口能够正确访问到本服务，否则 Let's Encrypt 会拒绝签发证书，参考：[验证方式](https://letsencrypt.org/zh-cn/docs/challenge-types/)。**
+
+默认值：`true`
+
+### server.tls.certPath
 
 TLS证书文件路径
 
-### server.tlsKey
+默认值：`server.crt`
+
+### server.tls.keyPath
 
 TLS证书密钥文件路径
+
+默认值：`server.key`
 
 ## 🛠️ 部署
 
@@ -80,7 +105,7 @@ go build -o registry-proxy
 
 ## 📖 使用建议
 
-本项目在设计和测试过程中，采用的部署架构是 nginx --- docker compose，建议你也采用类似的架构进行部署，这样方便你对https证书进行管理。
+本项目在设计和测试过程中，采用的部署架构是 `nginx` ---> `docker compose` ---> `registry-proxy`，建议你也采用类似的架构进行部署，这样方便你复用80、443端口以及对证书的统一管理，除非你打算在设备上只部署该服务。
 
 ## ⚖️ 许可证
 

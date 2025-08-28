@@ -2,31 +2,73 @@ package server
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
+	"fmt"
 	"net/http"
 	"registry-proxy/internal/config"
 	"registry-proxy/internal/handler"
 	"registry-proxy/pkg/console"
 
 	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/acme/autocert"
 )
 
-var httpServer *http.Server
+var (
+	httpServer      *http.Server
+	httpsServer     *http.Server
+	autoCertManager *autocert.Manager
+)
 
-func startHTTPServer() {
+func listenHTTP() error {
+	console.Log().Info("[http] 正在监听: %s", httpServer.Addr)
+	if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("[http] 监听 %s 失败, %s", httpServer.Addr, err)
+	}
+
+	console.Log().Info("[http] 服务器已关闭")
+	return nil
+}
+
+func listenHTTPS() error {
+	var certPath, keyPath string
+	if !config.Server.TLS.UseLetsEncrypt {
+		certPath = config.Server.TLS.CertPath
+		keyPath = config.Server.TLS.KeyPath
+	}
+
+	console.Log().Info("[https] 正在监听: %s", httpsServer.Addr)
+	if err := httpsServer.ListenAndServeTLS(certPath, keyPath); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("[https] 监听 %s 时错误, %s", httpsServer.Addr, err)
+	}
+
+	console.Log().Info("[https] 服务器已关闭")
+	return nil
+}
+
+func startHTTPServer() error {
 	engine := echo.New()
 	handler.Load(engine)
 
-	tlsConfig := &tls.Config{}
-	if config.Server.EnableTLS {
-		cert, err := tls.LoadX509KeyPair(config.Server.TLSCertificate, config.Server.TLSKey)
-		if err != nil {
-			console.Log().Error("[http] 加载TLS证书失败: %s", err)
-			return
+	if config.Server.TLS.Enable {
+		if config.Server.TLS.UseLetsEncrypt {
+			autoCertManager = &autocert.Manager{
+				Prompt: autocert.AcceptTOS,
+				Cache:  autocert.DirCache(".acme-cache"),
+			}
+
+			engine.GET("/.well-known/acme-challenge/*", echo.WrapHandler(autoCertManager.HTTPHandler(nil)))
+		} else if config.Server.TLS.CertPath == "" || config.Server.TLS.KeyPath == "" {
+			return errors.New("[https] server.tls.certPath 和 server.tls.keyPath 需要配置")
 		}
 
-		tlsConfig.Certificates = []tls.Certificate{cert}
+		httpsServer = &http.Server{
+			Addr:    config.Server.TLS.Listen,
+			Handler: engine,
+		}
+
+		if autoCertManager != nil {
+			httpsServer.TLSConfig = autoCertManager.TLSConfig()
+		}
 	}
 
 	httpServer = &http.Server{
@@ -34,19 +76,16 @@ func startHTTPServer() {
 		Handler: engine,
 	}
 
-	console.Log().Info("[http] 正在监听: %s", httpServer.Addr)
-	listenFunc := httpServer.ListenAndServe
-	if config.Server.EnableTLS {
-		listenFunc = func() error {
-			return httpServer.ListenAndServeTLS(config.Server.TLSCertificate, config.Server.TLSKey)
-		}
-	}
+	errCh := make(chan error, 2)
+	go func() {
+		errCh <- listenHTTP()
+	}()
 
-	if err := listenFunc(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		console.Log().Error("[http] 监听 %s 失败, %s", httpServer.Addr, err)
-	} else {
-		console.Log().Info("[http] 服务器已关闭")
-	}
+	go func() {
+		errCh <- listenHTTPS()
+	}()
+
+	return <-errCh
 }
 
 func stopHTTPServer() {

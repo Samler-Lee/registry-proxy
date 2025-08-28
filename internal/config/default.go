@@ -2,11 +2,15 @@ package config
 
 var (
 	Server = &server{
-		Listen:         ":8000",
-		LogLevel:       "INFO",
-		EnableTLS:      false,
-		TLSCertificate: "server.crt",
-		TLSKey:         "server.key",
+		Listen:   ":80",
+		LogLevel: "INFO",
+		TLS: &tls{
+			Enable:         false,
+			Listen:         ":443",
+			UseLetsEncrypt: true,
+			CertPath:       "server.crt",
+			KeyPath:        "server.key",
+		},
 	}
 
 	Proxy = &proxy{

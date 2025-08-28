@@ -9,6 +9,10 @@
 [server]
 listen = ':8000'
 logLevel = 'INFO'
-enableTLS = false
-tlsCertificate = 'server.crt'
-tlsKey = 'server.key'
+
+[server.tls]
+enable = false
+listen = ':8443'
+useLetsEncrypt = false
+certPath = 'server.crt'
+keyPath = 'server.key'

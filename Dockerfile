@@ -22,5 +22,6 @@ RUN apk update \
 COPY --from=builder /app/registry-proxy /app/registry-proxy
 WORKDIR /app
 
-EXPOSE 8000
+EXPOSE 80
+EXPOSE 443
 ENTRYPOINT ["./registry-proxy", "serve"]

@@ -10,11 +10,17 @@ import (
 )
 
 type server struct {
+	Listen   string `toml:"listen"`
+	LogLevel string `toml:"logLevel"`
+	TLS      *tls   `toml:"tls"`
+}
+
+type tls struct {
+	Enable         bool   `toml:"enable"`
 	Listen         string `toml:"listen"`
-	LogLevel       string `toml:"logLevel"`
-	EnableTLS      bool   `toml:"enableTLS"`
-	TLSCertificate string `toml:"tlsCertificate"`
-	TLSKey         string `toml:"tlsKey"`
+	UseLetsEncrypt bool   `toml:"useLetsEncrypt"`
+	CertPath       string `toml:"certPath"`
+	KeyPath        string `toml:"keyPath"`
 }
 
 type proxy struct {
