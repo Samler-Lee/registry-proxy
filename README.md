@@ -50,7 +50,7 @@ HTTPS 服务监听的地址和端口
 
 是否启用基于 `Let's Encrypt` 的自动证书管理功能，该配置与 `server.tls.certPath` 和 `server.tls.keyPath` 互斥，如果启用该配置，后者将失效。
 
-**注意：如果启用该配置，请确保 `80` 端口与 `443` 端口能够正确访问到本服务，否则 Let's Encrypt 会拒绝签发证书，参考：[验证方式](https://letsencrypt.org/zh-cn/docs/challenge-types/)。**
+**注意：如果启用该配置，请确保 `80` 或 `443` 端口能够正确访问到本服务，否则 Let's Encrypt 会拒绝签发证书，参考：[验证方式](https://letsencrypt.org/zh-cn/docs/challenge-types/)。**
 
 默认值：`true`
 
@@ -74,24 +74,34 @@ TLS证书密钥文件路径
 
 ### Docker
 
-在本项目根目录下执行以下命令来构建容器镜像
+#### 在本项目根目录下执行以下命令来构建容器镜像，或者直接使用预先构建好的公共镜像
 ```shell
 docker build -t registry-proxy:latest .
 ```
 
-启动容器
+#### 启动容器
 ```shell
-docker run -itd -p 8000:8000 -v ./config.toml:/app/config.toml --restart=always registry-proxy:latest
+docker run -itd -p 8000:80 -p 8443:443 -v ./config.toml:/app/config.toml --restart=always registry-proxy:latest
 ```
+
+或
+
+```shell
+docker run -itd -p 8000:80 -p 8443:443 -v ./config.toml:/app/config.toml --restart=always ghcr.io/samler-lee/registry-proxy:latest
+```
+
+这样一来，容器将使用系统的 `8000` 和 `8443` 端口进行监听，你可以访问 `http://docker.registry-proxy.localhost:8000/v2/` 进行测试。
 
 ### Docker Compose（推荐）
 
-再本项目根目录中提供了一个`docker-compose.yml`，你可以使用它进行 Docker Compose 方式的部署。
+在本项目根目录中提供了一个 `docker-compose.yml` 文件，你可以使用它进行 Docker Compose 方式的部署。
 
-首先参考 Docker 章节中的构建容器镜像，然后执行以下命令来启动服务
+首先参考 Docker 章节中的构建容器镜像，或者直接使用预先构建好的公共镜像，然后执行以下命令来启动服务
 ```shell
 docker-compose up -d
 ```
+
+**公共镜像地址：`ghcr.io/samler-lee/registry-proxy:latest`，如果要使用，记得修改 `docker-compose.yml` 中的 `image` 字段。**
 
 ### 二进制
 

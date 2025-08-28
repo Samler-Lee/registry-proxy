@@ -50,7 +50,7 @@ Default value: `:443`
 
 Whether to enable automatic certificate management based on `Let's Encrypt`. This configuration is mutually exclusive with `server.tls.certPath` and `server.tls.keyPath`. If this configuration is enabled, the latter will be disabled.
 
-**Note: If this configuration is enabled, please ensure that ports `80` and `443` can correctly access this service, otherwise Let's Encrypt will refuse to issue certificates. Reference: [Challenge Types](https://letsencrypt.org/docs/challenge-types/).**
+**Note: If this configuration is enabled, please ensure that port `80` or `443` can correctly access this service, otherwise Let's Encrypt will refuse to issue certificates. Reference: [Challenge Types](https://letsencrypt.org/docs/challenge-types/).**
 
 Default value: `true`
 
@@ -74,24 +74,34 @@ This project supports the following deployment methods. You can choose according
 
 ### Docker
 
-Execute the following command in the project root directory to build the container image
+#### Execute the following command in the project root directory to build the container image, or directly use the pre-built public image
 ```shell
 docker build -t registry-proxy:latest .
 ```
 
-Start the container
+#### Start the container
 ```shell
-docker run -itd -p 8000:8000 -v ./config.toml:/app/config.toml --restart=always registry-proxy:latest
+docker run -itd -p 8000:80 -p 8443:443 -v ./config.toml:/app/config.toml --restart=always registry-proxy:latest
 ```
+
+or
+
+```shell
+docker run -itd -p 8000:80 -p 8443:443 -v ./config.toml:/app/config.toml --restart=always ghcr.io/samler-lee/registry-proxy:latest
+```
+
+This way, the container will listen on the system's `8000` and `8443` ports. You can test by accessing `http://docker.registry-proxy.localhost:8000/v2/`.
 
 ### Docker Compose (Recommended)
 
 A `docker-compose.yml` file is provided in the project root directory, which you can use for Docker Compose deployment.
 
-First, refer to the Docker section to build the container image, then execute the following command to start the service
+First, refer to the Docker section to build the container image, or directly use the pre-built public image, then execute the following command to start the service
 ```shell
 docker-compose up -d
 ```
+
+**Public image address: `ghcr.io/samler-lee/registry-proxy:latest`. If you want to use it, remember to modify the `image` field in `docker-compose.yml`.**
 
 ### Binary
 
