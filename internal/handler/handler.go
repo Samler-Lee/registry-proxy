@@ -3,7 +3,6 @@ package handler
 import (
 	"errors"
 	"net/http"
-	"registry-proxy/internal/handler/internal/common"
 	"registry-proxy/internal/handler/internal/registry"
 	"registry-proxy/internal/middleware"
 
@@ -36,7 +35,7 @@ func Load(e *echo.Echo) {
 
 	v2 := e.Group("/v2", middleware.DomainBinding)
 	{
-		v2.GET("/", common.EmptyResponse)
+		v2.GET("/", registry.GetRoot)
 
 		v2.HEAD("/:name/manifests/:reference", registry.GetManifests)
 		v2.HEAD("/:repo/:name/manifests/:reference", registry.GetManifests)

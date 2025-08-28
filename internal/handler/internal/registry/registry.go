@@ -64,6 +64,41 @@ func LoginProxy(c echo.Context) error {
 	return err
 }
 
+func GetRoot(c echo.Context) error {
+	endpoint := c.Get("endpoint").(string)
+
+	method := c.Request().Method
+	requestURL := util.GetRequestURL(endpoint, "v2") + "/"
+
+	console.Log().Debug("%s: %s", method, requestURL)
+	request, err := http.NewRequest(c.Request().Method, requestURL, c.Request().Body)
+	if err != nil {
+		return err
+	}
+
+	util.SetRequestHeader(c.Request(), request.Header)
+	resp, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		util.AuthenticateRedirect(resp.Header, util.GetRealScheme(c), c.Request().Host)
+	}
+
+	for key, values := range resp.Header {
+		c.Response().Header()[key] = values
+	}
+
+	c.Response().WriteHeader(resp.StatusCode)
+	_, err = io.Copy(c.Response().Writer, resp.Body)
+	return err
+}
+
 func GetManifests(c echo.Context) error {
 	endpoint := c.Get("endpoint").(string)
 	repo := c.Param("repo")
