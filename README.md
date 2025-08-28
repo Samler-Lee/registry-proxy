@@ -1,3 +1,5 @@
+[English Version](https://github.com/Samler-Lee/registry-proxy/blob/master/README_en.md)
+
 # Registry Proxy
 
 一个轻量级容器镜像代理服务
