@@ -8,6 +8,7 @@
 
 - 支持多上游代理
 - 支持私有仓库登录认证
+- 支持全路径代理（代理 push 等操作）
 - 无磁盘缓存，对小磁盘容量设备友好
 - 较低的内存占用
 - 支持 Let's Encrypt 证书自动管理
@@ -15,6 +16,14 @@
 ## ⚙️ 配置
 
 项目根目录中提供了一个 `config.toml` 文件，它就是该项目的默认配置文件，你也可以直接运行 `registry-proxy serve` 来获得。
+
+### proxy.coverAll
+
+是否启用全路径代理，开启后，你可以使用它代理 push 操作，也可以使用其它有关的API，参考：[HTTP API V2](https://distribution.github.io/distribution/spec/api/)
+
+**注意：如果你需要代理push，那么 `proxy.binding` 中的上游地址必须为官方仓库地址**
+
+默认值：`false`
 
 ### proxy.binding
 

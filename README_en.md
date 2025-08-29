@@ -8,6 +8,7 @@ A lightweight container registry proxy service
 
 - Support for multiple upstream
 - Support for private registry login authentication
+- Support for full-path proxy (proxy push operations and more)
 - No disk caching, friendly to devices with limited disk capacity
 - Low memory consumption
 - Support for Let's Encrypt automatic certificate management
@@ -15,6 +16,14 @@ A lightweight container registry proxy service
 ## ⚙️ Configuration
 
 A `config.toml` file is provided in the project root directory, which serves as the default configuration file for this project. You can also obtain it by directly running `registry-proxy serve`.
+
+### proxy.coverAll
+
+Whether to enable full-path proxy. When enabled, you can use it to proxy push operations and other related APIs. Reference: [HTTP API V2](https://distribution.github.io/distribution/spec/api/)
+
+**Note: If you need to proxy push operations, the upstream addresses in `proxy.binding` must be official registry addresses**
+
+Default value: `false`
 
 ### proxy.binding
 

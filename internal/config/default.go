@@ -14,6 +14,7 @@ var (
 	}
 
 	Proxy = &proxy{
+		CoverAll: false,
 		Binding: map[string]string{
 			"docker.registry-proxy.localhost": "https://registry-1.docker.io",
 			"ghcr.registry-proxy.localhost":   "https://ghcr.io",

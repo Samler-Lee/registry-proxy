@@ -24,7 +24,8 @@ type tls struct {
 }
 
 type proxy struct {
-	Binding map[string]string `toml:"binding"`
+	CoverAll bool              `toml:"coverAll"`
+	Binding  map[string]string `toml:"binding"`
 }
 
 func Load() {

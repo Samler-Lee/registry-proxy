@@ -58,6 +58,17 @@ func AuthenticateRedirect(header http.Header, scheme string, host string) {
 	}
 }
 
+func UploadRedirect(header http.Header) {
+	if location := header.Get("Location"); location != "" {
+		if strings.HasPrefix(location, "/v2/") {
+			return
+		}
+
+		_, after, _ := strings.Cut(location, "/v2/")
+		header.Set("Location", "/v2/"+after)
+	}
+}
+
 func SetRequestHeader(request *http.Request, header http.Header) {
 	for key, values := range request.Header {
 		header.Set(key, strings.Join(values, ","))

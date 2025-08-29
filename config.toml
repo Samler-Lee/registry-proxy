@@ -1,4 +1,6 @@
 [proxy]
+coverAll = false
+
 [proxy.binding]
 'docker.registry-proxy.localhost' = 'https://registry-1.docker.io'
 'gcr.registry-proxy.localhost' = 'https://gcr.io'
@@ -7,12 +9,12 @@
 'quay.registry-proxy.localhost' = 'https://quay.io'
 
 [server]
-listen = ':8000'
+listen = ':80'
 logLevel = 'INFO'
 
 [server.tls]
 enable = false
-listen = ':8443'
-useLetsEncrypt = false
+listen = ':443'
+useLetsEncrypt = true
 certPath = 'server.crt'
 keyPath = 'server.key'

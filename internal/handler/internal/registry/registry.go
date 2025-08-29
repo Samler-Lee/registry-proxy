@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"registry-proxy/internal/pkg/util"
 	"registry-proxy/pkg/console"
+	"slices"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -19,10 +20,9 @@ var client = &http.Client{
 		DialContext: (&net.Dialer{
 			Timeout: 30 * time.Second,
 		}).DialContext,
-		IdleConnTimeout:       90 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
 		ExpectContinueTimeout: 10 * time.Second,
 	},
+	Timeout: 0,
 }
 
 func LoginProxy(c echo.Context) error {
@@ -164,6 +164,43 @@ func GetBlobs(c echo.Context) error {
 
 	if resp.StatusCode == http.StatusUnauthorized {
 		util.AuthenticateRedirect(resp.Header, util.GetRealScheme(c), c.Request().Host)
+	}
+
+	for key, values := range resp.Header {
+		c.Response().Header()[key] = values
+	}
+
+	c.Response().WriteHeader(resp.StatusCode)
+	_, err = io.Copy(c.Response().Writer, resp.Body)
+	return err
+}
+
+func ProxyRequest(c echo.Context) error {
+	endpoint := c.Get("endpoint").(string)
+
+	method := c.Request().Method
+	requestURL := endpoint + c.Request().RequestURI
+
+	console.Log().Debug("%s: %s", method, requestURL)
+	request, err := http.NewRequest(method, requestURL, c.Request().Body)
+	if err != nil {
+		return err
+	}
+
+	util.SetRequestHeader(c.Request(), request.Header)
+	resp, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		util.AuthenticateRedirect(resp.Header, util.GetRealScheme(c), c.Request().Host)
+	} else if slices.Contains([]int{http.StatusCreated, http.StatusAccepted, http.StatusNoContent, http.StatusRequestedRangeNotSatisfiable}, resp.StatusCode) {
+		util.UploadRedirect(resp.Header)
 	}
 
 	for key, values := range resp.Header {

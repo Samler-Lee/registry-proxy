@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"registry-proxy/internal/config"
 	"registry-proxy/internal/handler/internal/registry"
 	"registry-proxy/internal/middleware"
 
@@ -35,16 +36,20 @@ func Load(e *echo.Echo) {
 
 	v2 := e.Group("/v2", middleware.DomainBinding)
 	{
-		v2.GET("/", registry.GetRoot)
+		if config.Proxy.CoverAll {
+			v2.Any("/*", registry.ProxyRequest)
+		} else {
+			v2.GET("/", registry.GetRoot)
 
-		v2.HEAD("/:name/manifests/:reference", registry.GetManifests)
-		v2.HEAD("/:repo/:name/manifests/:reference", registry.GetManifests)
-		v2.GET("/:name/manifests/:reference", registry.GetManifests)
-		v2.GET("/:repo/:name/manifests/:reference", registry.GetManifests)
+			v2.HEAD("/:name/manifests/:reference", registry.GetManifests)
+			v2.HEAD("/:repo/:name/manifests/:reference", registry.GetManifests)
+			v2.GET("/:name/manifests/:reference", registry.GetManifests)
+			v2.GET("/:repo/:name/manifests/:reference", registry.GetManifests)
 
-		v2.HEAD("/:name/blobs/:digest", registry.GetBlobs)
-		v2.HEAD("/:repo/:name/blobs/:digest", registry.GetBlobs)
-		v2.GET("/:name/blobs/:digest", registry.GetBlobs)
-		v2.GET("/:repo/:name/blobs/:digest", registry.GetBlobs)
+			v2.HEAD("/:name/blobs/:digest", registry.GetBlobs)
+			v2.HEAD("/:repo/:name/blobs/:digest", registry.GetBlobs)
+			v2.GET("/:name/blobs/:digest", registry.GetBlobs)
+			v2.GET("/:repo/:name/blobs/:digest", registry.GetBlobs)
+		}
 	}
 }
